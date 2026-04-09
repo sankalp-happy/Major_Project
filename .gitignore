@@ -1,0 +1,81 @@
+# ------------------------------
+# Project-specific exclusions
+# ------------------------------
+
+# Academic/paper material
+paper/
+papers/
+
+# Markdown docs (keep only root README.md)
+**/*.md
+!/README.md
+
+# Paper/document formats
+**/*.pdf
+**/*.doc
+**/*.docx
+**/*.tex
+**/*.bib
+**/*.ppt
+**/*.pptx
+
+# Agent/tool metadata
+.agents/
+.superpowers/
+skills-lock.json
+
+# ------------------------------
+# Build outputs and generated files
+# ------------------------------
+repo/bin/
+artifacts/
+frontend/public/artifacts/
+
+# ------------------------------
+# Python
+# ------------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.pyre/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# ------------------------------
+# Node / frontend
+# ------------------------------
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+*.tsbuildinfo
+*.local
+
+# Package manager logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ------------------------------
+# OS / editor files
+# ------------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.sw?
