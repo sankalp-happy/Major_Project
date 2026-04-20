@@ -28,6 +28,7 @@ The current implementation focuses on Phase 1 (analysis and graph generation), w
 ## Repository Layout
 
 - `phase1/` - Python pipeline for parsing C code and generating graph artifacts.
+- `phase2/` - Topological orchestration pipeline (batch planning, recursive task runtime, obligation propagation, validation, metrics).
 - `repo/` - Pilot C codebase used as controlled input for analysis.
 - `artifacts/phase1/` - Generated JSON artifacts from the Phase 1 pipeline.
 - `frontend/` - Visual UI to inspect symbols and dependency topology.
@@ -90,6 +91,43 @@ From the project root:
 python3 -m pytest tests -q
 ```
 
+### 4) Run Phase 2 orchestration
+
+Generate Phase 2 outputs in deterministic mock mode:
+
+```bash
+python3 -m phase2 --repo repo --sdg artifacts/phase1/sdg_v1.json --out artifacts/phase2 --runtime mock
+```
+
+This command generates:
+
+- `artifacts/phase2/migration_plan.json`
+- `artifacts/phase2/tasks.json`
+- `artifacts/phase2/validations.json`
+- `artifacts/phase2/obligations.json`
+- `artifacts/phase2/evaluation.json`
+- `artifacts/phase2/report.json`
+
+Optional guardrails for per-task validation:
+
+```bash
+python3 -m phase2 \
+  --repo repo \
+  --sdg artifacts/phase1/sdg_v1.json \
+  --out artifacts/phase2 \
+  --runtime mock \
+  --enable-guardrails \
+  --compile-cmd "cargo check" \
+  --test-cmd "cargo test"
+```
+
+Optional runtime adapter for Recursive Language Models (`alexzhang13/rlm`):
+
+```bash
+python3 -m pip install rlms
+python3 -m phase2 --repo repo --sdg artifacts/phase1/sdg_v1.json --out artifacts/phase2 --runtime rlm
+```
+
 ## How to Run the Frontend
 
 The frontend reads SDG artifacts from `frontend/public/artifacts/`.
@@ -123,8 +161,9 @@ npm run preview
 
 - Phase 1 parsing and artifact generation is implemented.
 - Query and impact analysis utilities are available in `phase1/pipeline.py`.
+- Phase 2 orchestration is implemented with dependency-safe batch planning, recursive task execution, obligation propagation, and artifact reporting.
 - Frontend visualization is wired to SDG JSON artifacts.
-- Migration execution (`C` to `Rust`) is planned for next phases.
+- Live migration via external RLM providers is supported through an optional runtime adapter.
 
 ## Troubleshooting
 
