@@ -1,12 +1,12 @@
-# Legacy-to-Modern Code Migration with SDGs and RLMs
+# Legacy-to-Modern Code Migration with SDGs and LLMs
 
 This repository contains a working prototype for migrating legacy `C` code toward `Rust` by combining:
 
 - static dependency analysis over the full repository,
 - an SDG-style graph representation of code relationships,
-- and recursive orchestration logic for propagating interface changes safely.
+- and dependency-safe topological orchestration with repeated LLM calls.
 
-The current implementation focuses on Phase 1 (analysis and graph generation), with scaffolding for downstream impact analysis used by later migration stages.
+The current implementation includes Phase 1 (analysis and graph generation) and a simplified Phase 2 execution runtime that repeatedly calls an LLM per function in dependency order.
 
 ## Objectives
 
@@ -15,7 +15,7 @@ The current implementation focuses on Phase 1 (analysis and graph generation), w
    - include relationships,
    - global variable reads and writes,
    - and type usage links.
-2. Use that model as the foundation for recursive migration planning where code changes can be propagated in dependency order.
+2. Use that model as the foundation for dependency-safe migration planning where code changes can be propagated in dependency order.
 
 ## Tech Stack
 
@@ -28,8 +28,10 @@ The current implementation focuses on Phase 1 (analysis and graph generation), w
 ## Repository Layout
 
 - `phase1/` - Python pipeline for parsing C code and generating graph artifacts.
+- `phase2/` - Topological execution pipeline with repeated LLM calls (`mock` or `llm` runtime).
 - `repo/` - Pilot C codebase used as controlled input for analysis.
 - `artifacts/phase1/` - Generated JSON artifacts from the Phase 1 pipeline.
+- `artifacts/phase2/` - Generated JSON artifacts from the Phase 2 pipeline.
 - `frontend/` - Visual UI to inspect symbols and dependency topology.
 - `tests/` - Pytest suite for analysis correctness and regression checks.
 
@@ -90,6 +92,42 @@ From the project root:
 python3 -m pytest tests -q
 ```
 
+### 4) Run Phase 2 orchestration
+
+Generate Phase 2 outputs with deterministic mock runtime:
+
+```bash
+python3 -m phase2 --repo repo --sdg artifacts/phase1/sdg_v1.json --out artifacts/phase2 --runtime mock
+```
+
+Run with Groq provider:
+
+```bash
+export GROQ_API_KEY="<your_key>"
+python3 -m phase2 \
+  --repo repo \
+  --sdg artifacts/phase1/sdg_v1.json \
+  --out artifacts/phase2 \
+  --runtime llm \
+  --llm-provider groq \
+  --llm-model llama-3.3-70b-versatile
+```
+
+Run with Ollama provider:
+
+```bash
+python3 -m phase2 \
+  --repo repo \
+  --sdg artifacts/phase1/sdg_v1.json \
+  --out artifacts/phase2 \
+  --runtime llm \
+  --llm-provider ollama \
+  --llm-model llama3.1 \
+  --llm-base-url http://localhost:11434/v1
+```
+
+By default, the orchestrator logs progress for every call (current call, calls left, and percent complete). Tune verbosity with `--log-level`.
+
 ## How to Run the Frontend
 
 The frontend reads SDG artifacts from `frontend/public/artifacts/`.
@@ -123,8 +161,9 @@ npm run preview
 
 - Phase 1 parsing and artifact generation is implemented.
 - Query and impact analysis utilities are available in `phase1/pipeline.py`.
+- Phase 2 topological orchestration is implemented with per-function repeated LLM calls.
 - Frontend visualization is wired to SDG JSON artifacts.
-- Migration execution (`C` to `Rust`) is planned for next phases.
+- LLM runtime supports `groq` and `ollama` providers.
 
 ## Troubleshooting
 
