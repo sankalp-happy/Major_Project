@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 from pathlib import Path
 
 from phase1.pipeline import build_phase1, load_sdg_graph
@@ -46,12 +47,12 @@ def run_cli(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--rlm-model",
-        default="llama-3.3-70b-versatile",
-        help="Model name for RLM (e.g. llama-3.3-70b-versatile, llama3.1, gpt-4o)",
+        default="qwen3.5:9b",
+        help="Model name for RLM (e.g. qwen3.5:9b, llama3.1, gpt-4o)",
     )
     parser.add_argument(
         "--rlm-base-url",
-        default="https://api.groq.com/openai/v1",
+        default="http://127.0.0.1:11434/v1",
         help="Base URL for the RLM backend (use http://localhost:11434/v1 for ollama)",
     )
     parser.add_argument(
@@ -81,12 +82,27 @@ def run_cli(argv: list[str] | None = None) -> int:
         type=int,
         help="Guardrail command timeout in seconds",
     )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable verbose logging",
+    )
 
     args = parser.parse_args(argv)
 
     repo_root = Path(args.repo).resolve()
     sdg_path = Path(args.sdg).resolve()
     output_dir = Path(args.out).resolve()
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    logging.basicConfig(
+        level=logging.DEBUG if args.verbose else logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        handlers=[
+            logging.StreamHandler(),
+            logging.FileHandler(output_dir / "run.log", mode="w", encoding="utf-8")
+        ]
+    )
 
     if not sdg_path.exists():
         phase1_output = output_dir.parent / "phase1"
@@ -105,7 +121,7 @@ def run_cli(argv: list[str] | None = None) -> int:
             },
         }
 
-    runtime = build_runtime(args.runtime, **runtime_kwargs)
+    runtime = build_runtime(args.runtime, **runtime_kwargs, verbose=args.verbose)
 
     guardrails = GuardrailConfig(
         enabled=bool(args.enable_guardrails),
